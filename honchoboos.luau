@@ -3,8 +3,30 @@ local workspace = game:GetService("Workspace")
 local HIGHLIGHT_COLOR = Color3.fromRGB(0, 255, 0)
 local OUTLINE_COLOR = Color3.fromRGB(255, 255, 255)
 
-local lastTargetNumbers = {}
-local lastKnownRoom = nil
+local bossDefeated = false
+local bossActive = false
+
+local function isBossAlive()
+    local players = game:GetService("Players")
+    local player = players.LocalPlayer
+    if not player then return false end
+
+    local gui = player:FindFirstChild("PlayerGui")
+    if gui then
+        for _, obj in pairs(gui:GetDescendants()) do
+            if obj.Name == "BossHealthBar" or obj.Name == "HonchoIndicator" then
+                return true
+            end
+        end
+    end
+
+    local honcho = workspace:FindFirstChild("Honcho")
+    if honcho and honcho:IsA("Model") then
+        return true
+    end
+
+    return false
+end
 
 local function getTargetNumbersFromScreens()
     local targets = {}
@@ -46,6 +68,24 @@ local function doHonchoESP()
     if not rooms then 
         clearAllHighlights()
         return 
+    end
+
+    local bossAlive = isBossAlive()
+    
+    if not bossAlive and bossActive then
+        bossDefeated = true
+        bossActive = false
+        clearAllHighlights()
+        print("Босс побеждён, подсветка отключена")
+        return
+    end
+
+    if bossDefeated then
+        return
+    end
+
+    if bossAlive then
+        bossActive = true
     end
 
     local targetNumbers = getTargetNumbersFromScreens()
